@@ -8,8 +8,8 @@ int main(int argc, char *(argv[]))
     float x_0 = std::atof(argv[2]);
     float v_0 = std::atof(argv[3]);
     unsigned long int N = std::atoi(argv[4]); //насколько разбиваем
-    std::cout << w << " " << x_0 << " " << v_0 << " " << N;
-    float delita_x = std::atof(argv[4]);
+    float delita_x = std::atof(argv[5]);
+    std::cout << w << " " << x_0 << " " << v_0 << " " << N << " " << delita_x << '\n';
     float *x_array = new float[N];
     float *x_abs = new float[N];
     float *v_array = new float[N];
@@ -26,7 +26,7 @@ int main(int argc, char *(argv[]))
         v_array[i + 1] = v_array[i] - delita_x * w * w * x_array[i];
         E_array[i + 1] = v_array[i + 1] * v_array[i + 1] / 2 + x_array[i + 1] * x_array[i + 1] * w / 2;
 
-        // std::cout << x_array[i] << " "<< v_array[i] << '\n';
+        //std::cout << x_array[i] << " "<< v_array[i] << '\n';
     }
     out.write((char *)x_array, N * sizeof(float));
     out.close();

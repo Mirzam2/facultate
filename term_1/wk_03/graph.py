@@ -18,10 +18,19 @@ with open("results_x_abs.bin") as f:
     data_x_abs = np.fromfile(f, dtype=np.float32, count=N, offset=0, sep="")
 with open("results_E.bin") as f:
     data_E = np.fromfile(f, dtype=np.float32, count=N, offset=0, sep="")
+process2 = subprocess.Popen([".\Trap", str(w), str(x_0), str(v_0),str(N),str(dt)])
+process2.wait()
+with open("results_x_trap.bin") as f:
+    data_x_trap = np.fromfile(f, dtype=np.float32, count=N, offset=0, sep="")
+with open("results_v_trap.bin") as f:
+    data_v_trap = np.fromfile(f, dtype=np.float32, count=N, offset=0, sep="")
+with open("results_E_trap.bin") as f:
+    data_E_trap = np.fromfile(f, dtype=np.float32, count=N, offset=0, sep="")
 #%%
 x = np.arange(0, N)
 plt.plot(x, data_x)
-plt.plot(x, data_x_abs)
+#plt.plot(x, data_x_abs)
+plt.plot(x,data_x_trap)
 plt.xlabel(r't', fontsize=14)
 plt.ylabel(r'X', fontsize=14)
 plt.title(r'$График$')
@@ -30,6 +39,7 @@ plt.show()
 
 # %%
 plt.plot(x, data_E)
+plt.plot(x, data_E_trap)
 plt.xlabel(r't', fontsize=14)
 plt.ylabel(r'E', fontsize=14)
 plt.title(r'$График \ E$')
@@ -37,8 +47,9 @@ plt.show()
 
 # %%
 plt.plot(data_x, data_v)
-plt.xlabel(r'x', fontsize=14)
-plt.ylabel(r'v', fontsize=14)
+plt.plot(data_x_trap, data_v_trap)
+plt.xlabel(r'x', fontsize=16)
+plt.ylabel(r'v', fontsize=16)
 plt.title(r'$Фазовая \ диаграмма$')
 plt.show()
 # %%

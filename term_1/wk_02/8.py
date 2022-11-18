@@ -14,7 +14,7 @@ ln, = plt.plot([], [], 'ro')
 def init():
     ax.set_xlim(0, 2*np.pi)
     ax.set_ylim(-1, 1)
-    return ln,
+    return ln
 
 def update(frame):
     xdata.append(frame)
