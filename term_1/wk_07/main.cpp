@@ -13,6 +13,7 @@ public:
     virtual void print() = 0;
     virtual T &operator[](int i) = 0;
     virtual void copy(State<T, N> &other){};
+    friend void swap(State<T, N> &a, State<T, N> &b){};
 
 private:
 };
@@ -31,7 +32,7 @@ public:
         {
             std::cout << value[i] << " ";
         }
-        std::cout << '\n';
+        std::cout << std::endl;
     }
     NVector(const NVector<T, N> &other)
     {
@@ -44,12 +45,13 @@ public:
         print();
     }
 
-    friend void swap(NVector<T, N>& a, NVector<T, N>& b){
+    friend void swap(NVector<T, N> &a, NVector<T, N> &b)
+    {
         std::swap(a.value, b.value);
     }
 
-    void copy(NVector<T, N> &other) 
-    {   
+    void copy(NVector<T, N> &other)
+    {
         value = other.value;
     }
     // NVector operator=(const NVector<T, N> &other)
@@ -143,36 +145,22 @@ public:
     Calc(Func<T, N> &f, Method<T, N> &meth) : f(f), meth(meth)
     {
     }
-    void process(State<T, N> &start_value, State<T, N> &end, State<T, N> &temp, T delita, int N_calc)
+    void process(State<T, N> *start_value, State<T, N> *end, State<T, N> *temp, T delita, int N_calc)
     {
         std::cout << "calculate start\n";
         for (int i = 0; i < N_calc; ++i)
         {
-            std::cout << "i: " << i << " begin \n";
-            start_value.print();
-            end.print();
-            meth.df(start_value, end, temp, delita, f);
-            start_value.print();
-            end.print();
-            start_value.copy(end);
-            std::cout << "i: " << i << " end\n";
-            start_value.print();
-            end.print();
+            meth.df(*start_value, *end, *temp, delita, f);
+            temp = start_value;
+            start_value = end;
+            end = temp;
+            // std::cout << "i: " << i << " end\n";
+            // start_value->print();
+            // end->print();
         }
+        std::cout << "calculate end\n";
         // save_to_file(0, "aaao");
     }
-    // void print()
-    // {
-    //     for (int i = 0; i < value_arr.size(); ++i)
-    //     {
-    //         std::cout << "i: " << i << " ";
-    //         for (int j = 0; j < (value_arr[i]).size(); ++j)
-    //         {
-    //             std::cout << " " << j << " derevtive: " << value_arr[i][j];
-    //         }
-    //         std::cout << '\n';
-    //     }
-    // }
     void save_all_data()
     {
     }
@@ -181,59 +169,30 @@ private:
     T *x_arr;
     Func<T, N> &f;
     Method<T, N> &meth;
-    // void save_to_file(int index, std::string name)
-    // {
-    //     name += ".bin";
-    //     std::ofstream out(name, std::ios::binary | std::ios::out);
-    //     for (int i = 0; i < value_arr.size(); ++i)
-    //     {
-    //         out.write((char *)value_arr[i][index], sizeof(T));
-    //     }
-    //     out.close();
-    // }
 };
 int main()
 {
     std::vector<float> const_arr;
     NVector<float, 2> start;
     NVector<float, 2> end;
-    start.print();
 
     start[0] = 1;
     start[1] = 0;
-
-    std::cout << " prior swap" << std::endl;
-    start.print();
-    end.print();
-
-    std::cout << " swap done here" << std::endl;
-    std::swap(start, end);
-
-    std::cout << " upon swap" << std::endl;
-    start.print();
-    end.print();
     // please refer to the https://stackoverflow.com/questions/20594374/c-inheritance-of-copy-move-swap-assignment-and-destructor-which-do-i-need
-    std::cout << "please refer https://stackoverflow.com/questions/20594374/c-inheritance-of-copy-move-swap-assignment-and-destructor-which-do-i-need for more info" << std::endl;
-    return 0;
-
     const_arr.push_back(1);
     NVector<float, 2> t(start);
-    end.copy(start);
-    std::cout << "copy t test\n";
-    start.print();
-    end.print();
-    t.print();
     Grav<float, 2> fu(const_arr);
     Eiler<float, 2> eil;
-    eil.df(start, end, t, 0.1, fu);
-    start.copy(end);
     eil.df(start, end, t, 0.1, fu);
     std::cout << "df test: \n";
     start.print();
     end.print();
+    std::swap(start, end);
+    start.print();
+    end.print();
     //     // Grav<float> fu;
     Calc<float, 2> calculate(fu, eil);
-    calculate.process(start, end, t, 0.1, 10);
+    calculate.process(&start, &end, &t, 0.1, 10);
     start.print();
     //      // calculate.process(start, 0.01, 100);
     //      // calculate.print();
