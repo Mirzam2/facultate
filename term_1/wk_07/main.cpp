@@ -14,6 +14,7 @@ public:
     virtual T &operator[](int i) = 0;
     virtual void copy(State<T, N> &other){};
     friend void swap(State<T, N> &a, State<T, N> &b){};
+    virtual std::array<T, N> get_array() = 0;
 
 private:
 };
@@ -53,6 +54,10 @@ public:
     void copy(NVector<T, N> &other)
     {
         value = other.value;
+    }
+    std::array<T, N> get_array()
+    {
+        return value;
     }
     // NVector operator=(const NVector<T, N> &other)
     // {
@@ -157,15 +162,29 @@ public:
             // std::cout << "i: " << i << " end\n";
             // start_value->print();
             // end->print();
+            std::array<T, N> t = end->get_array();
+            data.push_back(t);
         }
         std::cout << "calculate end\n";
-        // save_to_file(0, "aaao");
+        save_to_file("data");
     }
-    void save_all_data()
+    void save_to_file(std::string filename)
     {
+        std::ofstream f;
+        f.open(filename);
+        for (int i = 0; i < data.size(); ++i)
+        {
+            for (int j = 0; j < N; ++j)
+            {
+                f << data[i][j] << "\t";
+            }
+            f << "\n";
+        }
+        f.close();
     }
 
 private:
+    std::vector<std::array<T, N>> data;
     T *x_arr;
     Func<T, N> &f;
     Method<T, N> &meth;
