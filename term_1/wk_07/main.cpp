@@ -12,8 +12,7 @@ public:
     virtual int get_size() = 0;
     virtual void print() = 0;
     virtual T &operator[](int i) = 0;
-    virtual void copy(State<T, N> &other) = 0;
-    //метод для чинили swap
+    virtual void copy(State<T, N> &other){};
 
 private:
 };
@@ -45,8 +44,12 @@ public:
         print();
     }
 
-    void copy(NVector<T, N> &other)
-    {
+    friend void swap(NVector<T, N>& a, NVector<T, N>& b){
+        std::swap(a.value, b.value);
+    }
+
+    void copy(NVector<T, N> &other) 
+    {   
         value = other.value;
     }
     // NVector operator=(const NVector<T, N> &other)
@@ -198,6 +201,21 @@ int main()
 
     start[0] = 1;
     start[1] = 0;
+
+    std::cout << " prior swap" << std::endl;
+    start.print();
+    end.print();
+
+    std::cout << " swap done here" << std::endl;
+    std::swap(start, end);
+
+    std::cout << " upon swap" << std::endl;
+    start.print();
+    end.print();
+    // please refer to the https://stackoverflow.com/questions/20594374/c-inheritance-of-copy-move-swap-assignment-and-destructor-which-do-i-need
+    std::cout << "please refer https://stackoverflow.com/questions/20594374/c-inheritance-of-copy-move-swap-assignment-and-destructor-which-do-i-need for more info" << std::endl;
+    return 0;
+
     const_arr.push_back(1);
     NVector<float, 2> t(start);
     end.copy(start);
