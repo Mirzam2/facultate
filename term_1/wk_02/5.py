@@ -19,7 +19,6 @@ ax2.set_ylabel('Undamped')
 
 plt.show()
 
-#%%
 
 import numpy as np
 import matplotlib.pyplot as plt
