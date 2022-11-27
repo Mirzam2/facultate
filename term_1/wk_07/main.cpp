@@ -83,6 +83,7 @@ class Func
 {
 public:
     virtual void operator()(State<T, N> &x, State<T, N> &result) = 0;
+    virtual float energy(State<T, N> &data) = 0;
 
 protected:
     std::vector<T> const_arr;
@@ -97,6 +98,10 @@ public:
     {
         result[0] = x[1];
         result[1] = -const_arr[0] * const_arr[0] * x[0];
+    }
+    float energy(State<T, N> &x) override
+    {
+        return x[1] * x[1] / 2 - const_arr[0] * x[0];
     }
 
 protected:
@@ -130,6 +135,22 @@ struct Eiler : Method<T, N>
         }
     }
 };
+// template <typename T, std::size_t N>
+// struct RungeKyt : Method<T, N>
+// {
+//     void df(State<T, N> &value, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f) override
+//     {
+//         f(value,temp);
+//         for (int i = 0; i < N; ++i){
+//             result[i] = value[i] + delita * temp[i]/6;
+//         }
+//         for(int i = 0; i < N; ++i)
+//         f(value,temp);
+//         for (int i = 0; i < N; ++i){
+//             result[i] = value[i] + delita * temp[i]/6;
+//         }
+//     }
+// }
 // // template <typename T>
 // // struct Trap : Method<T>
 // // {
@@ -166,7 +187,7 @@ public:
             data.push_back(t);
         }
         std::cout << "calculate end\n";
-        save_to_file("data");
+        save_to_file("data.txt");
     }
     void save_to_file(std::string filename)
     {
@@ -178,8 +199,10 @@ public:
             {
                 f << data[i][j] << "\t";
             }
-            f << "\n";
+            
+            f <<"\n";
         }
+
         f.close();
     }
 
@@ -189,29 +212,24 @@ private:
     Func<T, N> &f;
     Method<T, N> &meth;
 };
-int main()
+int main(int argc, char *(argv[]))
 {
+    //на вход подается колво шагов и шаг, x0,v0
+    size_t N = std::atoi(argv[1]);
+    float del = std::atof(argv[2]);
     std::vector<float> const_arr;
     NVector<float, 2> start;
     NVector<float, 2> end;
-
-    start[0] = 1;
-    start[1] = 0;
+    //можно написать универсальную принимающую из python циклом по количеству аргументов
+    start[0] = std::atof(argv[3]);
+    start[1] = std::atof(argv[4]);
     // please refer to the https://stackoverflow.com/questions/20594374/c-inheritance-of-copy-move-swap-assignment-and-destructor-which-do-i-need
     const_arr.push_back(1);
     NVector<float, 2> t(start);
     Grav<float, 2> fu(const_arr);
     Eiler<float, 2> eil;
-    eil.df(start, end, t, 0.1, fu);
-    std::cout << "df test: \n";
-    start.print();
-    end.print();
-    std::swap(start, end);
-    start.print();
-    end.print();
-    //     // Grav<float> fu;
     Calc<float, 2> calculate(fu, eil);
-    calculate.process(&start, &end, &t, 0.1, 10);
+    calculate.process(&start, &end, &t, del, N);
     start.print();
     //      // calculate.process(start, 0.01, 100);
     //      // calculate.print();
