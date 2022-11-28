@@ -15,6 +15,7 @@ public:
     virtual void copy(State<T, N> &other){};
     friend void swap(State<T, N> &a, State<T, N> &b){};
     virtual std::array<T, N> get_array() = 0;
+    virtual State& operator()(){return *this;}
 
 private:
 };
@@ -45,7 +46,10 @@ public:
         }
         print();
     }
-
+    // NVector& operator()()
+    // {
+    //     return new NVector<T, N>();
+    // }
     friend void swap(NVector<T, N> &a, NVector<T, N> &b)
     {
         std::swap(a.value, b.value);
@@ -77,7 +81,15 @@ public:
 private:
     std::array<T, N> value;
 };
-
+#include <memory>
+template <class NV>
+class Fabric
+{
+public:
+    NV fabric(){
+        return NV();
+    }
+};
 template <typename T, std::size_t N>
 class Func
 {
@@ -107,6 +119,7 @@ public:
 protected:
     std::vector<T> const_arr;
 };
+
 // template <typename T>
 // struct pendum final : Func<T>
 // {
@@ -116,16 +129,16 @@ protected:
 //     }
 // };
 
-template <typename T, std::size_t N>
+template <typename T, std::size_t N, typename NV>
 struct Method
 {
-    virtual void df(State<T, N> &value_arr, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f) = 0;
+    virtual void df(State<T, N> &value_arr, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f, Fabric<NV>& fab) = 0;
 };
 
-template <typename T, std::size_t N>
-struct Eiler : Method<T, N>
+template <typename T, std::size_t N,typename NV>
+struct Eiler : Method<T, N,NV>
 {
-    void df(State<T, N> &value_arr, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f) override
+    void df(State<T, N> &value_arr, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f, Fabric<NV>& fab) override
     {
         f(value_arr, temp);
         for (int i = 0; i < N; ++i)
@@ -135,22 +148,37 @@ struct Eiler : Method<T, N>
         }
     }
 };
-// template <typename T, std::size_t N>
-// struct RungeKyt : Method<T, N>
-// {
-//     void df(State<T, N> &value, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f) override
-//     {
-//         f(value,temp);
-//         for (int i = 0; i < N; ++i){
-//             result[i] = value[i] + delita * temp[i]/6;
-//         }
-//         for(int i = 0; i < N; ++i)
-//         f(value,temp);
-//         for (int i = 0; i < N; ++i){
-//             result[i] = value[i] + delita * temp[i]/6;
-//         }
-//     }
-// }
+template <typename T, std::size_t N, typename NV>
+struct RungeKyt : Method<T, N,NV>
+{
+    void df(State<T, N> &value, State<T, N> &result, State<T, N> &temp, T delita, Func<T, N> &f,Fabric<NV>& fab) override
+    {
+        f(value,temp);
+        auto k1 = fab.fabric();
+        auto k2 = fab.fabric();
+        auto k3 = fab.fabric();
+        auto k4 = fab.fabric();
+        auto YY = fab.fabric();
+
+        f(value,k1);
+
+        for (int i =0; i < N; ++i){
+            YY[i] = value[i] + k1[i] * delita /2;
+        }
+        f(YY,k2);
+        for (int i =0; i < N; ++i){
+            YY[i] = value[i] + k2[i] * delita /2;
+        }
+        f(YY,k3);
+        for (int i =0; i < N; ++i){
+            YY[i] = value[i] + k3[i] * delita;
+        }
+        f(YY,k4);
+        for (int i =0; i < N; ++i){
+            result[i] = value[i] + delita / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
+        }
+    }
+};
 // // template <typename T>
 // // struct Trap : Method<T>
 // // {
@@ -164,25 +192,28 @@ struct Eiler : Method<T, N>
 // //         return result;
 // //     }
 // // };
-template <typename T, std::size_t N>
+
+
+template <typename T, std::size_t N, class NV>
 class Calc
 {
 public:
-    Calc(Func<T, N> &f, Method<T, N> &meth) : f(f), meth(meth)
+    Calc(Func<T, N> &f, Method<T, N,NV> &meth, Fabric<NV>& fab) : f(f), meth(meth), fab(fab)
     {
     }
-    void process(State<T, N> *start_value, State<T, N> *end, State<T, N> *temp, T delita, int N_calc)
+    void process(State<T, N> *start_value, State<T, N> *end, State<T, N> *temp, T delita, int N_calc )
     {
         std::cout << "calculate start\n";
         for (int i = 0; i < N_calc; ++i)
         {
-            meth.df(*start_value, *end, *temp, delita, f);
+            meth.df(*start_value, *end, *temp, delita, f, fab);
             temp = start_value;
             start_value = end;
             end = temp;
             // std::cout << "i: " << i << " end\n";
             // start_value->print();
             // end->print();
+            // auto ter = start_value->operator()();
             std::array<T, N> t = end->get_array();
             data.push_back(t);
         }
@@ -199,8 +230,8 @@ public:
             {
                 f << data[i][j] << "\t";
             }
-            
-            f <<"\n";
+
+            f << "\n";
         }
 
         f.close();
@@ -210,7 +241,8 @@ private:
     std::vector<std::array<T, N>> data;
     T *x_arr;
     Func<T, N> &f;
-    Method<T, N> &meth;
+    Method<T, N,NV> &meth;
+    Fabric<NV> &fab;
 };
 int main(int argc, char *(argv[]))
 {
@@ -224,11 +256,15 @@ int main(int argc, char *(argv[]))
     start[0] = std::atof(argv[3]);
     start[1] = std::atof(argv[4]);
     // please refer to the https://stackoverflow.com/questions/20594374/c-inheritance-of-copy-move-swap-assignment-and-destructor-which-do-i-need
+    
+    
     const_arr.push_back(1);
     NVector<float, 2> t(start);
     Grav<float, 2> fu(const_arr);
-    Eiler<float, 2> eil;
-    Calc<float, 2> calculate(fu, eil);
+    RungeKyt<float, 2,NVector<float,2>> rk;
+    Eiler<float, 2,NVector<float,2>> eil;
+    Fabric<NVector<float,2>> fab;
+    Calc<float, 2,NVector<float,2>> calculate(fu, rk,fab);
     calculate.process(&start, &end, &t, del, N);
     start.print();
     //      // calculate.process(start, 0.01, 100);
